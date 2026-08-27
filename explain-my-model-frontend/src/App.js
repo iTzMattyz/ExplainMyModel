@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, X, Loader, Eye, Layers, Image, Brain, Sparkles, Info } from 'lucide-react';
 
+// Backend base URL. Set REACT_APP_API_URL at build time to point at a hosted
+// backend; falls back to the local uvicorn server for development.
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
 export default function ExplainMyModelDashboard() {
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -19,7 +23,7 @@ export default function ExplainMyModelDashboard() {
 
   const fetchModels = async () => {
     try {
-      const response = await fetch('http://localhost:8000/models');
+      const response = await fetch(`${API_URL}/models`);
       const data = await response.json();
       setAvailableModels(data.models);
     } catch (err) {
@@ -87,7 +91,7 @@ export default function ExplainMyModelDashboard() {
     formData.append('layer', selectedLayer);
     
     try {
-      const response = await fetch('http://localhost:8000/analyze', {
+      const response = await fetch(`${API_URL}/analyze`, {
         method: 'POST',
         body: formData
       });

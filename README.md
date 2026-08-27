@@ -3,6 +3,11 @@
 **Explain My Model** is an interactive web app that visualizes what convolutional neural networks (CNNs) "see" inside images.
 Using **Grad-CAM** (Gradient-weighted Class Activation Mapping) and **feature activation maps**, it provides an intuitive view into how deep learning models make decisions.
 
+> **Runs locally — there is no hosted demo.** Inference needs a Python process
+> with PyTorch and ~1 GB of RAM for the model cache, which no free static or
+> serverless host will run. See **Setup Instructions** below to run it on your
+> own machine; it takes two terminals and about five minutes.
+
 ---
 
 ## 🚀 Features
@@ -26,7 +31,7 @@ Using **Grad-CAM** (Gradient-weighted Class Activation Mapping) and **feature ac
 * Lucide Icons
 * Fetch API for backend communication
 
-**Backend (expected):**
+**Backend:**
 
 * FastAPI (Python)
 * PyTorch or TensorFlow for model inference
@@ -55,8 +60,8 @@ Using **Grad-CAM** (Gradient-weighted Class Activation Mapping) and **feature ac
 ### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/<your-username>/explain-my-model.git
-cd explain-my-model
+git clone https://github.com/iTzMattyz/ExplainMyModel.git
+cd ExplainMyModel
 ```
 
 ### 2️⃣ Install Dependencies
@@ -75,21 +80,47 @@ cd explain-my-model-backend
 pip install -r requirements.txt
 ```
 
-### 3️⃣ Run the App
+### 3️⃣ Configure the Backend URL
 
-**Start backend (FastAPI):**
+The frontend reads its backend address from `REACT_APP_API_URL`, falling back to
+`http://localhost:8000` when unset — so local development needs no config at all.
+For any deployed build, copy the example and point it at your hosted backend:
 
 ```bash
-uvicorn main:app --reload
+cd explain-my-model-frontend
+cp .env.example .env
 ```
 
-**Start frontend:**
+Because this is Create React App, the value is baked in at **build time**, not
+read at runtime — rebuild after changing it.
+
+### 4️⃣ Run the App
+
+Two processes, two terminals. **Start the backend first** — the frontend fetches
+the model list on mount and shows an empty dropdown if the API is unreachable.
+
+**Terminal 1 — backend (FastAPI):**
 
 ```bash
+cd explain-my-model-backend
+uvicorn main:app --reload --port 8000
+```
+
+Port `8000` is what `REACT_APP_API_URL` defaults to. The first `/analyze` call
+downloads that model's pretrained weights (~100 MB) into `~/.cache/torch`, so
+expect a pause; later calls reuse the cache.
+
+**Terminal 2 — frontend:**
+
+```bash
+cd explain-my-model-frontend
 npm start
 ```
 
-The app will be available at **[http://localhost:3000](http://localhost:3000)**
+The app will be available at **[http://localhost:3000](http://localhost:3000)**.
+Sanity-check the backend on its own at
+**[http://localhost:8000/models](http://localhost:8000/models)** — it should
+return the model list as JSON.
 
 ---
 
@@ -126,33 +157,30 @@ curl -X POST "http://localhost:8000/analyze" \
 
 ---
 
-## 🌈 UI Preview
-
-| Upload & Model Selection          | Grad-CAM Visualization       | Activation Maps                      |
-| --------------------------------- | ---------------------------- | ------------------------------------ |
-| ![Upload Screen](docs/upload.png) | ![GradCAM](docs/gradcam.png) | ![Activations](docs/activations.png) |
-
----
-
 ## 🧭 Project Structure
 
 ```
-explain-my-model/
+ExplainMyModel/
 ├── explain-my-model-frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   └── ExplainMyModelDashboard.jsx
-│   │   ├── index.js
-│   │   └── ...
 │   ├── public/
+│   ├── src/
+│   │   ├── App.js          # the entire ExplainMyModelDashboard component
+│   │   ├── App.css
+│   │   ├── index.js
+│   │   └── index.css
+│   ├── .env.example
 │   ├── package.json
+│   ├── postcss.config.js
 │   └── tailwind.config.js
 └── explain-my-model-backend/
-    ├── main.py
-    ├── models/
-    ├── utils/
+    ├── main.py                      # FastAPI app: Grad-CAM, activations, model cache
+    ├── imagenet-simple-labels.json  # 1000 ImageNet class names
     └── requirements.txt
 ```
+
+The dashboard is a single component in `src/App.js` — there is no `components/`
+directory. Torchvision weights are downloaded on first use and cached under
+`~/.cache/torch/hub/checkpoints`, so they are not vendored in the repo.
 
 ---
 
@@ -170,7 +198,7 @@ explain-my-model/
 
 **Mattia Jorgen Prugnoli**
 AI & Software Engineer passionate about explainable AI, neural visualization, and user-centered design.
-📫 Connect on [GitHub](https://github.com/<your-username>) or [LinkedIn](https://linkedin.com/in/<your-handle>)
+📫 Connect on [GitHub](https://github.com/iTzMattyz) or [LinkedIn](https://www.linkedin.com/in/mattia-jorgen-prugnoli-853169180/)
 
 ---
 
